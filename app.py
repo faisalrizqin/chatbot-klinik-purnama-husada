@@ -40,36 +40,83 @@ if menu == "Chatbot AI":
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    user_input = st.text_input("Tulis pertanyaan Anda:")
+    # Input chat
+    user_input = st.chat_input("Tulis pertanyaan Anda...")
 
-    if st.button("Kirim"):
-        if user_input:
-            prompt = f"""
-            Kamu adalah chatbot resmi Klinik Purnama Husada by Dr. Nur Widyastuti, M.KM.
-            Klinik memiliki Poli Umum dan Poli Gigi.
-            Jawablah dengan bahasa sopan, singkat, dan informatif.
+    if user_input:
 
-            Pertanyaan pasien:
-            {user_input}
-            """
+        system_prompt = """
+Kamu adalah Chatbot AI resmi Klinik Purnama Husada by Dr. Nur Widyastuti, M.KM.
 
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
+ATURAN WAJIB:
+1. Jawaban hanya boleh berkaitan dengan layanan Klinik Purnama Husada.
+2. Klinik memiliki Poli Umum dan Poli Gigi.
+3. Gunakan bahasa Indonesia yang sopan, jelas, dan profesional.
+4. Jangan memberikan diagnosis medis berat atau resep obat.
+5. Jika pertanyaan di luar konteks klinik, arahkan kembali ke informasi klinik.
+6. Jika pasien menanyakan kondisi serius, sarankan untuk datang langsung ke klinik.
+7. Gunakan jawaban singkat dan mudah dipahami.
 
-            st.session_state.chat_history.append(
-                ("Pasien", user_input)
-            )
-            st.session_state.chat_history.append(
-                ("Chatbot", response.text)
-            )
+INFORMASI KLINIK:
+- Nama: Klinik Purnama Husada
+- Pemilik: Dr. Nur Widyastuti, M.KM
 
+ATURAN TAMBAHAN:
+- Jika pasien bertanya tentang jadwal dokter, arahkan untuk membuka menu "Jadwal Dokter" untuk info lengkap.
+- Jika pasien bertanya nomor kontak, WhatsApp, alamat, atau lokasi, arahkan untuk membuka menu "Kontak & Lokasi".
+
+POLI UMUM:
+- Konsultasi 
+- KIA & KB 
+- Bedah Minor 
+- Laboratorium Sederhana 
+- Promosi Kesehatan 
+- Home Visit 
+
+POLI GIGI:
+- Konsultasi
+- Bedah Mulut Minor
+- Penambalan Gigi
+- Pencabutan Gigi Dewasa & Anak
+- Pembersihan Karang Gigi
+- Pembuatan Gigi Tiruan
+
+KONTAK KLINIK:
+- WhatsApp Admin Poli Gigi: 082313522209
+- Instagram: @klinikpurnamahusada
+- Pendaftaran Poli Umum melalui Aplikasi JKN Mobile
+
+Alamat:
+Jl. Raya Soekarno-Hatta No.111, Kersan, Kebondalem, Kendal, Jawa Tengah 51318
+"""
+
+        prompt = f"""
+{system_prompt}
+
+Pertanyaan pasien:
+{user_input}
+"""
+
+        # Kirim ke Gemini
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+
+        # Simpan ke history
+        st.session_state.chat_history.append(
+            ("Pasien", user_input)
+        )
+        st.session_state.chat_history.append(
+            ("Chatbot", response.text)
+        )
+
+    # Tampilkan chat history dengan tampilan chat bubble
     for role, message in st.session_state.chat_history:
         if role == "Pasien":
-            st.markdown(f"**🧑 Pasien:** {message}")
+            st.chat_message("user").write(message)
         else:
-            st.markdown(f"**🤖 Chatbot:** {message}")
+            st.chat_message("assistant").write(message)
 
 # ========================
 # PROFIL KLINIK
